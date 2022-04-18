@@ -1,0 +1,4 @@
+*.ipynb_checkpoints
+NSL-KDD
+*__pycache__
+*.idea
