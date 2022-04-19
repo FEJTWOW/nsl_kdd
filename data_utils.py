@@ -57,8 +57,8 @@ def _preprocess_X(X_train_base, X_test_base, standardize=True):
 
 
 def load_train_test_data(pwd='.', return_classes=True, standardize=True):
-    df_train = pd.read_csv(f'{pwd}/NSL-KDD/KDDTrain+.txt', header=None)
-    df_test = pd.read_csv(f'{pwd}/NSL-KDD/KDDTest+.txt', header=None)
+    df_train = pd.read_csv(f'{pwd}/data/NSL-KDD/KDDTrain+.txt', header=None)
+    df_test = pd.read_csv(f'{pwd}/data/NSL-KDD/KDDTest+.txt', header=None)
     X_train_base, Y_train_base = df_train.iloc[:, :41].values, df_train.iloc[:, 41].values
     X_test_base, Y_test_base = df_test.iloc[:, :41].values, df_test.iloc[:, 41].values
 
