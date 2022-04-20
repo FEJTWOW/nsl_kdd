@@ -3,7 +3,7 @@ import time
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
-from sklearn.preprocessing import LabelBinarizer, OneHotEncoder, StandardScaler
+from sklearn.preprocessing import LabelBinarizer, OneHotEncoder, StandardScaler, normalize
 
 ATTACK_LABELS_TYPES = {
     'normal': ['normal'],
@@ -34,9 +34,9 @@ def _preprocess_Y(Y_train_base, Y_test_base, return_classes=True):
         return (Y_train, Y_test), label_binarizer.classes_
     else:
         return Y_train, Y_test
+    
 
-
-def _preprocess_X(X_train_base, X_test_base, standardize=True):
+def _preprocess_X(X_train_base, X_test_base, standardize=True, norm=False):
     numerical_features = list(set(range(X_train_base.shape[1])) - set(CATEGORICAL_FEATURES))
 
     one_hot_encoder = OneHotEncoder()
@@ -52,11 +52,15 @@ def _preprocess_X(X_train_base, X_test_base, standardize=True):
         scaler.fit(np.vstack([X_train, X_test]))
         X_train = scaler.fit_transform(X_train)
         X_test = scaler.fit_transform(X_test)
+        
+    if norm:
+        X_train = normalize(X_train)
+        X_test = normalize(X_test)
 
     return X_train, X_test
 
 
-def load_train_test_data(pwd='.', return_classes=True, standardize=True):
+def load_train_test_data(pwd='.', return_classes=True, standardize=True, norm=False):
     df_train = pd.read_csv(f'{pwd}/data/NSL-KDD/KDDTrain+.txt', header=None)
     df_test = pd.read_csv(f'{pwd}/data/NSL-KDD/KDDTest+.txt', header=None)
     X_train_base, Y_train_base = df_train.iloc[:, :41].values, df_train.iloc[:, 41].values
@@ -64,13 +68,13 @@ def load_train_test_data(pwd='.', return_classes=True, standardize=True):
 
     (Y_train, Y_test), attack_classes = _preprocess_Y(Y_train_base, Y_test_base, return_classes=True)
 
-    X_train, X_test = _preprocess_X(X_train_base, X_test_base, standardize)
+    X_train, X_test = _preprocess_X(X_train_base, X_test_base, standardize, norm)
 
     if return_classes:
         return (X_train, X_test, Y_train, Y_test), attack_classes
     else:
         return X_train, X_test, Y_train, Y_test
-
+    
 
 def run_and_measure(fun, *args, **kwargs):
     start = time.time()
@@ -93,9 +97,10 @@ def plot_2d(X_list, y, subtitles, title, figsize=(24, 7), labels=None, bbox_shif
     plt.legend(handles, classes, bbox_to_anchor=(bbox_shift, 1.02), loc='upper right')
 
     plt.suptitle(title)
-
+    
 
 def write_to_file(images, path):
     f = open(path, "w")
     f.write(f"{images.shape[0]} {images.shape[1]}\n")
     pd.DataFrame(images).to_csv(path, sep=" ", header=False, index=False, mode='a')
+    
