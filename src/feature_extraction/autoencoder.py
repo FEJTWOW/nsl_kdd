@@ -9,9 +9,10 @@ class Autoencoder:
     Class implementing an autoencoder for nsl kdd feature extraction
     """
 
-    def __init__(self, n_bottleneck, name='default', input_len=38, model_path=None):
+    def __init__(self, n_bottleneck, root='.', name='default', input_len=38, model_path=None):
         """
         :param n_bottleneck: Number of neurons in the bottleneck
+        :param root: path to root directory
         :param name: Autoencoder name
         :param input_len: Length of base feature vectors
         :param model_path: Path to save model weights and loss history. If None, will be set to
@@ -22,7 +23,7 @@ class Autoencoder:
         self.input_len = input_len
         self.model_path = model_path
         if model_path is None:
-            self.model_path = f"model_weights/{name}/autoencoder_{n_bottleneck}"
+            self.model_path = f"{root}/model_weights/{name}/autoencoder_{n_bottleneck}"
 
         self.encoder, self.autoencoder = self._build_model()
         self.history = None
@@ -103,7 +104,7 @@ class Autoencoder:
 
         x = k_layers.Dense(30, activation='relu')(inputs)
         encoded_outputs = k_layers.Dense(self.n_bottleneck)(x)
-        x = k_layers.Dense(30, activation='relu')(inputs)
+        x = k_layers.Dense(30, activation='relu')(encoded_outputs)
         outputs = k_layers.Dense(self.input_len)(x)
 
         encoder = tf.keras.Model(inputs, encoded_outputs)
