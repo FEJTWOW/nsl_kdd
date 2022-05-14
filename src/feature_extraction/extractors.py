@@ -1,3 +1,5 @@
+from sklearn.preprocessing import StandardScaler
+
 from src.feature_extraction import Autoencoder
 
 
@@ -19,13 +21,17 @@ class AutoencoderExtractor:
         self.autoencoder = Autoencoder(n_bottleneck, input_len=input_len, model_path=model_path)
         self.autoencoder.load_weights()
 
-    def extract_features(self, X):
+    def extract_features(self, X, scale=True):
         """
         Use the autoencoder to extract features from the vector
         :param X: An array of shape (n x m) with n vectors, each of length m
+        :param scale: If True, features will be transformed with StandardScaler
         :return: Extracted features
         """
-        return self.autoencoder.encode(X)
+        Y = self.autoencoder.encode(X)
+        if scale:
+            Y = StandardScaler().fit_transform(Y)
+        return Y
 
     def evaluate(self, X):
         """
