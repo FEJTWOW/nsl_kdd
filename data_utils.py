@@ -18,20 +18,22 @@ ATTACK_LABELS_TYPES = {
 CATEGORICAL_FEATURES = [1, 2, 3]
 
 
-def _preprocess_Y(Y_train_base, Y_test_base, return_classes=True):
+def _preprocess_Y(Y_train_base, Y_test_base, return_classes=True, group_y=True):
     attack_labels_dict = {v: k for k, v_list in ATTACK_LABELS_TYPES.items() for v in v_list}
-    Y_train_grouped = np.array(list(map(lambda x: attack_labels_dict[x], Y_train_base)))
-    Y_test_grouped = np.array(list(map(lambda x: attack_labels_dict[x], Y_test_base)))
-    attack_labels_base = list(set(np.unique(Y_train_grouped)) | set(np.unique(Y_test_grouped)))
+    if group_y:
+        Y_train_base = np.array(list(map(lambda x: attack_labels_dict[x], Y_train_base)))
+        Y_test_base = np.array(list(map(lambda x: attack_labels_dict[x], Y_test_base)))
+
+    attack_labels_base = list(set(np.unique(Y_train_base)) | set(np.unique(Y_test_base)))
 
     label_binarizer = LabelBinarizer()
     label_binarizer = label_binarizer.fit(attack_labels_base)
 
-    Y_train = label_binarizer.transform(Y_train_grouped)
-    Y_test = label_binarizer.transform(Y_test_grouped)
+    Y_train = label_binarizer.transform(Y_train_base)
+    Y_test = label_binarizer.transform(Y_test_base)
 
     if return_classes:
-        return (Y_train, Y_test), label_binarizer.classes_
+        return (Y_train, Y_test), label_binarizer.classes_, 
     else:
         return Y_train, Y_test
     
@@ -62,13 +64,13 @@ def _preprocess_X(X_train_base, X_test_base, standardize=True, norm=False, inclu
     return X_train, X_test
 
 
-def load_train_test_data(pwd='.', return_classes=True, standardize=True, norm=False, include_categorical=True):
+def load_train_test_data(pwd='.', return_classes=True, standardize=True, norm=False, include_categorical=True, group_y=True):
     df_train = pd.read_csv(f'{pwd}/data/NSL-KDD/KDDTrain+.txt', header=None)
     df_test = pd.read_csv(f'{pwd}/data/NSL-KDD/KDDTest+.txt', header=None)
     X_train_base, Y_train_base = df_train.iloc[:, :41].values, df_train.iloc[:, 41].values
     X_test_base, Y_test_base = df_test.iloc[:, :41].values, df_test.iloc[:, 41].values
 
-    (Y_train, Y_test), attack_classes = _preprocess_Y(Y_train_base, Y_test_base, return_classes=True)
+    (Y_train, Y_test), attack_classes = _preprocess_Y(Y_train_base, Y_test_base, return_classes=True, group_y=group_y)
 
     X_train, X_test = _preprocess_X(X_train_base, X_test_base, standardize, norm, include_categorical)
 
