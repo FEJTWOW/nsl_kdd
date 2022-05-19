@@ -38,19 +38,12 @@ def _preprocess_Y(Y_train_base, Y_test_base, return_classes=True, group_y=True):
         return Y_train, Y_test
     
 
-def _preprocess_X(X_train_base, X_test_base, standardize=True, norm=False, include_categorical=True):
+def _preprocess_X(X_train_base, X_test_base, standardize=True, norm=False, include_categorical=True, return_categories=False):
     numerical_features = list(set(range(X_train_base.shape[1])) - set(CATEGORICAL_FEATURES))
     
     X_train = X_train_base[:, numerical_features].astype(np.float32)
     X_test = X_test_base[:, numerical_features].astype(np.float32)
-
-    if include_categorical:
-        one_hot_encoder = OneHotEncoder()
-        one_hot_encoder.fit(np.vstack([X_train_base[:, CATEGORICAL_FEATURES], X_test_base[:, CATEGORICAL_FEATURES]]))
-
-        X_train = np.hstack([X_train, one_hot_encoder.transform(X_train_base[:, CATEGORICAL_FEATURES]).toarray()])
-        X_test = np.hstack([X_test, one_hot_encoder.transform(X_test_base[:, CATEGORICAL_FEATURES]).toarray()])
-
+    
     if standardize:
         scaler = StandardScaler()
         scaler.fit(np.vstack([X_train, X_test]))
@@ -61,10 +54,22 @@ def _preprocess_X(X_train_base, X_test_base, standardize=True, norm=False, inclu
         X_train = normalize(X_train)
         X_test = normalize(X_test)
 
-    return X_train, X_test
+    if include_categorical:
+        one_hot_encoder = OneHotEncoder()
+        one_hot_encoder.fit(np.vstack([X_train_base[:, CATEGORICAL_FEATURES], X_test_base[:, CATEGORICAL_FEATURES]]))
+
+        X_train = np.hstack([X_train, one_hot_encoder.transform(X_train_base[:, CATEGORICAL_FEATURES]).toarray()])
+        X_test = np.hstack([X_test, one_hot_encoder.transform(X_test_base[:, CATEGORICAL_FEATURES]).toarray()])
+
+    
+    if return_categories:
+        return (X_train, X_test), one_hot_encoder.categories_
+    else:
+        return X_train, X_test
+    
 
 
-def load_train_test_data(pwd='.', return_classes=True, standardize=True, norm=False, include_categorical=True, group_y=True):
+def load_train_test_data(pwd='.', return_classes=True, standardize=True, norm=False, include_categorical=True, group_y=True, return_categories=False):
     df_train = pd.read_csv(f'{pwd}/data/NSL-KDD/KDDTrain+.txt', header=None)
     df_test = pd.read_csv(f'{pwd}/data/NSL-KDD/KDDTest+.txt', header=None)
     X_train_base, Y_train_base = df_train.iloc[:, :41].values, df_train.iloc[:, 41].values
@@ -72,10 +77,17 @@ def load_train_test_data(pwd='.', return_classes=True, standardize=True, norm=Fa
 
     (Y_train, Y_test), attack_classes = _preprocess_Y(Y_train_base, Y_test_base, return_classes=True, group_y=group_y)
 
-    X_train, X_test = _preprocess_X(X_train_base, X_test_base, standardize, norm, include_categorical)
+    if return_categories:
+        (X_train, X_test), categories = _preprocess_X(X_train_base, X_test_base, standardize, norm, include_categorical, return_categories)
+    else:
+        (X_train, X_test) = _preprocess_X(X_train_base, X_test_base, standardize, norm, include_categorical, return_categories)
 
-    if return_classes:
+    if return_classes and return_categories:
+        return (X_train, X_test, Y_train, Y_test), attack_classes, categories
+    elif return_classes:
         return (X_train, X_test, Y_train, Y_test), attack_classes
+    elif return_categories:
+        return (X_train, X_test, Y_train, Y_test), categories
     else:
         return X_train, X_test, Y_train, Y_test
     
