@@ -4,12 +4,12 @@ import tensorflow as tf
 from tensorflow.keras import layers as k_layers
 
 
-class Autoencoder:
+class AbstractAutoencoder:
     """
     Class implementing an autoencoder for nsl kdd feature extraction
     """
 
-    def __init__(self, n_bottleneck, root='.', name='default', input_len=38, model_path=None):
+    def __init__(self, n_bottleneck, root, name, input_len, model_path):
         """
         :param n_bottleneck: Number of neurons in the bottleneck
         :param root: path to root directory
@@ -40,13 +40,13 @@ class Autoencoder:
         :param save: True: save the weights and history to self.model_path; False: do not save
         :return: self
         """
-        self.autoencoder.compile(tf.keras.optimizers.Adam(learning_rate=lr), loss="mse")
-
+        self._compile(lr)
         callbacks = []
         if lr_patience is not None:
             callbacks.append(tf.keras.callbacks.ReduceLROnPlateau(monitor="loss", factor=0.5, patience=lr_patience))
 
-        self.history = self.autoencoder.fit(X, X, batch_size=batch_size, epochs=n_epochs, verbose=verbose,
+        self.history = self.autoencoder.fit(X, self._retrieve_output(X), batch_size=batch_size, epochs=n_epochs,
+                                            verbose=verbose,
                                             callbacks=callbacks).history
         if save:
             self.autoencoder.save_weights(f"{self.model_path}/weights")
@@ -91,7 +91,7 @@ class Autoencoder:
         :return: Loss value
         """
         self.autoencoder.compile("adam", loss="mse")
-        return self.autoencoder.evaluate(X, X)
+        return self.autoencoder.evaluate(X, self._retrieve_output(X))
 
     def summary(self):
         """
@@ -99,18 +99,17 @@ class Autoencoder:
         """
         return self.autoencoder.summary()
 
+    @staticmethod
+    def _retrieve_output(X):
+        raise "Method unimplemented in abstract class"
+
+    def _compile(self, lr):
+        raise "Method unimplemented in abstract class"
+
     def _build_model(self):
-        inputs = k_layers.Input(self.input_len)
+        raise "Method unimplemented in abstract class"
 
-        x = k_layers.Dense(30, activation='relu')(inputs)
-        encoded_outputs = k_layers.Dense(self.n_bottleneck)(x)
-        x = k_layers.Dense(30, activation='relu')(encoded_outputs)
-        outputs = k_layers.Dense(self.input_len)(x)
 
-        encoder = tf.keras.Model(inputs, encoded_outputs)
-        autoencoder = tf.keras.Model(inputs, outputs)
-
-        return encoder, autoencoder
 
 
 if __name__ == "__main__":

@@ -1,6 +1,8 @@
 from sklearn.preprocessing import StandardScaler
 
-from src.feature_extraction import Autoencoder
+from src.feature_extraction import AbstractAutoencoder
+from src.feature_extraction import CategoricalAutoencoder
+from src.feature_extraction import ClassicalAutoencoder
 
 
 class AutoencoderExtractor:
@@ -8,7 +10,7 @@ class AutoencoderExtractor:
     Enables easy access to autoencoders and feature extraction
     """
 
-    def __init__(self, n_bottleneck, name='default', root=None, input_len=38):
+    def __init__(self, n_bottleneck, input_len, name='default', root=None):
         """
         :param n_bottleneck: Number of neurons in the bottleneck
         :param name: Autoencoder name
@@ -18,8 +20,8 @@ class AutoencoderExtractor:
         if root is None:
             root = "../.."
         model_path = f"{root}/src/feature_extraction/model_weights/{name}/autoencoder_{n_bottleneck}/"
-        self.autoencoder = Autoencoder(n_bottleneck, input_len=input_len, model_path=model_path)
-        self.autoencoder.load_weights()
+        self.autoencoder = None
+        self._set_autoencoder(n_bottleneck, input_len, model_path)
 
     def extract_features(self, X, scale=True):
         """
@@ -40,3 +42,38 @@ class AutoencoderExtractor:
         :return: Loss value
         """
         return self.autoencoder.compile_and_evaluate(X)
+
+    def _set_autoencoder(self, n_bottleneck, input_len, model_path):
+        raise "Method not implemented"
+
+
+class CategoricalExtractor(AutoencoderExtractor):
+
+    def __init__(self, n_bottleneck, input_len=128, name='CategoricalAutoencoder', root=None):
+        """
+        :param n_bottleneck: Number of neurons in the bottleneck
+        :param name: Autoencoder name
+        :param root: Root directory of the repo
+        :param input_len: Length of base feature vectors
+        """
+        AutoencoderExtractor.__init__(self, n_bottleneck, input_len, name, root)
+
+    def _set_autoencoder(self, n_bottleneck, input_len, model_path):
+        self.autoencoder = CategoricalAutoencoder(n_bottleneck, input_len=input_len, model_path=model_path)
+        self.autoencoder.load_weights()
+
+
+class ClassicalExtractor(AutoencoderExtractor):
+
+    def __init__(self, n_bottleneck, input_len=38, name='ClassicalAutoencoder', root=None):
+        """
+        :param n_bottleneck: Number of neurons in the bottleneck
+        :param name: Autoencoder name
+        :param root: Root directory of the repo
+        :param input_len: Length of base feature vectors
+        """
+        AutoencoderExtractor.__init__(self, n_bottleneck, input_len, name, root)
+
+    def _set_autoencoder(self, n_bottleneck, input_len, model_path):
+        self.autoencoder = ClassicalAutoencoder(n_bottleneck, input_len=input_len, model_path=model_path)
+        self.autoencoder.load_weights()

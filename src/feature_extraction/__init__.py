@@ -1,2 +1,4 @@
-from .autoencoder import Autoencoder
-from .extractors import AutoencoderExtractor
+from .abstract_autoencoder import AbstractAutoencoder
+from .classical_autoencoder import ClassicalAutoencoder
+from .categorical_autoencoder import CategoricalAutoencoder
+from .extractors import AutoencoderExtractor, CategoricalExtractor, ClassicalExtractor
