@@ -49,7 +49,7 @@ class AutoencoderExtractor:
 
 class CategoricalExtractor(AutoencoderExtractor):
 
-    def __init__(self, n_bottleneck, input_len=128, name='CategoricalAutoencoder', root=None):
+    def __init__(self, n_bottleneck, input_len=122, name='CategoricalAutoencoder', root=None):
         """
         :param n_bottleneck: Number of neurons in the bottleneck
         :param name: Autoencoder name
