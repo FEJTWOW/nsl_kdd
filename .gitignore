@@ -2,3 +2,7 @@
 NSL-KDD
 *__pycache__
 *.idea
+*.pdf
+.*
+*.txt
+annoy_index_file
