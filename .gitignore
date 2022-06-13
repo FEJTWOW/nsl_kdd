@@ -6,3 +6,5 @@ NSL-KDD
 .*
 *.txt
 annoy_index_file
+
+notebooks/analysis/plots
